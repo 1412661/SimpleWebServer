@@ -123,7 +123,7 @@ struct List* parseByRegex(char* regexString, char* string, unsigned int* nCaptur
 
     //REG_EXTENDED: Use POSIX Extended Regular Expression
     if (regcomp(&regex, regexString, REG_EXTENDED))
-        error("parseByRegex(): Could not compile regex: ", regexString);
+        printf("parseByRegex(): Could not compile regex: %s\n", regexString);
 
     if (regexec(&regex, string, regexMaxMatch, pmatch, 0))
     {
