@@ -134,7 +134,8 @@ void startServer(int port)
     char cport[5];
     snprintf(cport, 5, "%d", port);
 
-    struct addrinfo hints, *res, *p;
+    struct addrinfo hints;
+    struct addrinfo *res, *p;
 
     // getaddrinfo for host
     memset (&hints, 0, sizeof(hints));
@@ -147,13 +148,17 @@ void startServer(int port)
         exit(1);
     }
     // socket and bind
-    for (p = res; p!=NULL; p=p->ai_next)
+    for (p = res; p != NULL; p = p->ai_next)
     {
-        listenfd = socket (p->ai_family, p->ai_socktype, 0);
-        if (listenfd == -1) continue;
-        if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0) break;
+        listenfd = socket(p->ai_family, p->ai_socktype, 0);
+        if (listenfd == -1)
+			continue;
+
+        if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0)
+			break;
     }
-    if (p==NULL)
+
+    if (!p)
     {
         perror ("socket() or bind()");
         exit(1);
