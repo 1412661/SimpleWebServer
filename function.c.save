@@ -183,10 +183,10 @@ char* getRequestFile(char* msg)
 
 int countChildProcess(int parentPid)
 {
-	char command[BUFFSIZE_VAR] = "";
+	char command[BUFFSIZE_VAR] = "ps --ppid %d --no-headers | grep -v \"<defunct>\" | wc -l";
 	char countc[BUFFSIZE_VAR];
 
-    sprintf(command, "ps --ppid %d --no-headers | grep -v \"<defunct>\" | wc -l", parentPid);
+    sprintf(command, command, parentPid);
     printf("%s\n", command);
 
 	FILE* f = popen(command, "r");
