@@ -186,11 +186,10 @@ int countChildProcess(int parentPid)
 	char command[BUFFSIZE_VAR] = "";
 	char countc[BUFFSIZE_VAR];
 
-    sprintf(command, "ps --ppid %d --no-headers | grep -v \"<defunct>\" | wc -l", parentPid);
-    printf("%s\n", command);
+    sprintf(command, "ps --ppid %d --no-headers | grep -v defunct | wc -l", parentPid);
 
 	FILE* f = popen(command, "r");
     fgets(countc, sizeof(countc), f);
 
-    return strtol(countc, NULL, 10);
+    return strtol(countc, NULL, 10) - 1;
 }

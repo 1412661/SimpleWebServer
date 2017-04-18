@@ -4,5 +4,8 @@
 
 [Reference source code](http://blog.abhijeetr.com/2010/04/very-simple-http-server-writen-in-c.html)
 
+Socket example code:
+* Server: [server.c](http://www.linuxhowtos.org/data/6/server.c)
+
 Task:
 * Fix bug (Bao)
