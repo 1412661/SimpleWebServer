@@ -1,6 +1,6 @@
 CC = gcc
 LIBS =
-ARGS = "-stc=c99"
+ARGS = "--std=c99"
 
 all:
 	$(CC) $(ARGS) -c webserver.c $(LIBS)
