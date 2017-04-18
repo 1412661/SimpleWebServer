@@ -135,7 +135,8 @@ struct List* parseByRegex(char* regexString, char* string, unsigned int* nCaptur
     regfree(&regex);
 
     struct List* r = NULL;
-    for (int i = 0; i < regexMaxMatch; i++)
+    int i = 0;
+    for (i = 0; i < regexMaxMatch; i++)
     {
         if (pmatch[i].rm_so < 0)
             break;
