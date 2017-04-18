@@ -24,6 +24,7 @@ starts the server at port 10000 with ROOT as /home/shadyabhi
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <fcntl.h>
 
 #include "linklist.h"
