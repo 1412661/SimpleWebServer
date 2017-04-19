@@ -65,4 +65,11 @@ char* getRequestFile(char* msg);
  */
 int countChildProcess(int parentPid);
 
+/**
+ * Search captital by country
+ * @param country
+ * @return capital of the country, NULL if couldn't find
+ */
+char* searchCap(char* country);
+
 #endif // _FUNCTION_H_
