@@ -16,3 +16,23 @@ Tutorial:
 - [Syncing a fork](https://help.github.com/articles/syncing-a-fork/)
 - [Use SSH key instead of password](http://stackoverflow.com/questions/1595848/configuring-git-over-ssh-to-login-once)
 - [Sổ tay Git](http://rogerdudler.github.io/git-guide/index.vi.html)
+
+# Usage
+---------------------
+
+## Building from reposity
+
+    $ make
+
+## Run program
+
+To run program at default port 999
+
+    $ ./webserver
+To run program at a specific port, use option -p
+
+    $ ./webserver -p <port>
+    
+## Live demo
+
+Please take a look at [http://webserver.baonq.xyz:9999](http://webserver.baonq.xyz:9999)
