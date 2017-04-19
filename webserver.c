@@ -36,18 +36,21 @@ http://stackoverflow.com/questions/9681531/graceful-shutdown-server-socket-in-li
 #include "http.h"
 #include "function.h"
 
-#define CONNMAX 50
 
 // watch -n 0.1 wget --delete-after http://localhost:9999
 
+int parentPID;
 int socketfd;
 void startServer(int);
-void respond(int);
+void respond(int,int);
 
 static volatile int keepRunning = 1;
 
 void intHandler()
 {
+	if (getpid() != parentPID)
+		return;
+
     printf("\nCtrl + C catched !\n");
     printf("Waiting for all sockets to be closed...\n");
 
@@ -68,6 +71,9 @@ void intHandler()
 
 int main(int argc, char* argv[])
 {
+	// Get PID of parent process
+	parentPID = getpid();
+
     signal(SIGINT, intHandler);
 
     int port = DEFAULT_PORT;
@@ -80,15 +86,18 @@ int main(int argc, char* argv[])
     {
         struct sockaddr_in clientaddr;
         socklen_t addrlen = sizeof(clientaddr);
+        printf("Waiting for new connection...\n");
         int clientfd = accept(socketfd, (struct sockaddr *) &clientaddr, &addrlen);
 
+        int childProc =  countChildProcess(getpid());
         if (clientfd >= 0)
         {
+        	printf("Connection with descriptor %d is accepted\n", clientfd);
             // On success, the PID of the child process is returned in the parent,
             // and 0 is returned in the child
             if (fork() == 0)
             {
-                respond(clientfd);
+                respond(clientfd, childProc);
                 break;
             }
         }
@@ -107,33 +116,44 @@ void startServer(int port)
 
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketfd < 0)
-        printf("ERROR opening socket");
+        error("socket(): could not initialize socket");
 
     bzero((char*)&serv_addr, sizeof(serv_addr));
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(port);
 
-    if (bind(socketfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-        printf("ERROR on binding");
+    while (1)
+	{
+		serv_addr.sin_port = htons(port);
+		if (bind(socketfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+			printf("bind(): could not bind socket at port %d\n", port--);
+        else
+			break;
+	}
+
 
     if (listen(socketfd, BUFFSIZE_DATA) != 0)
-		printf("ERROR on listening");
+		error("listen(): could not listen socket");
 
-	printf("Server started at port %s%d%s width pid=%s%d%s\n", "\033[92m", port, "\033[0m", "\033[92m", getpid(), "\033[0m");
+	printf("Socket server started at port %s%d%s width pid %s%d%s\n", "\033[92m", port, "\033[0m", "\033[92m", getpid(), "\033[0m");
 }
 
 //client connection
-void respond(int clientfd)
+void respond(int clientfd, int connections)
 {
-    char *mesg = (char*)malloc(BUFFSIZE_DATA);
-    memset(mesg, 0, BUFFSIZE_DATA);
+	if (connections > CONNMAX)
+	{
+		write(clientfd, HTTP_429, strlen(HTTP_429));
+		close(clientfd);
+		return;
+	}
 
-    char *returnData;
-    char* requestFile;
-    int bytes;
-    int fileDescriptor;
+    char mesg[BUFFSIZE_DATA] = "";
+    char returnData[BUFFSIZE_DATA] = "";
+
+    char* file;
+    int f, bytes;
 
     int rcvd = recv(clientfd, mesg, BUFFSIZE_DATA, 0);
     if (rcvd < 0)
@@ -144,21 +164,25 @@ void respond(int clientfd)
     {
         printf("<!-- Message begin: -->\n%s<!-- Message end -->\n", mesg);
 
-        requestFile = getRequestFile(mesg);
-        printf("Requested file: |%s|\n", requestFile);
-        fileDescriptor = open(requestFile, O_RDONLY);
-        if (fileDescriptor != -1)    //FILE FOUND
-        {
-            returnData = (char*)malloc(BUFFSIZE_VAR);
+        file = getRequestFile(mesg);
+        printf("Requested file: |%s|\n", file);
+
+
+        if ((f = open(file, O_RDONLY)) == -1)
+			write(clientfd, HTTP_404, strlen(HTTP_404));
+		else
+		{
             send(clientfd, HTTP_200, strlen(HTTP_200), 0);
-            while ((bytes = read(fileDescriptor, returnData, BUFFSIZE_VAR)) > 0)
-                write(clientfd, returnData, bytes);
-        }
-        else
-            write(clientfd, HTTP_404, strlen(HTTP_404)); //FILE NOT FOUND
+            while ((bytes = read(f, returnData, BUFFSIZE_DATA)) > 0)
+			{
+				printf("Byte wrote: %d\n", write(clientfd, returnData, bytes));
+			}
+		}
     }
 
-    free(requestFile);
+    free(file);
     shutdown(clientfd, SHUT_RDWR);         // All further send and recieve operations are DISABLED...
     close(clientfd);
+
+    printf("Current connection is closed\n");
 }

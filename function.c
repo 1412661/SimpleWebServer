@@ -167,7 +167,7 @@ char* getRequestFile(char* msg)
 {
 	char* file;
 
-	if (strstr(msg, "GET / HTTP") != NULL)
+	if ((strstr(msg, "GET / HTTP") != NULL) || strstr(msg, "HEAD / HTTP") != NULL)
 	{
 		file = (char*)malloc(BUFFSIZE_VAR);
         strcpy(file, INDEX_FILE);
