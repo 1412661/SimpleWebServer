@@ -8,4 +8,6 @@ Socket example code:
 * Server: [server.c](http://www.linuxhowtos.org/data/6/server.c)
 
 Task:
-* Fix bug (Bao)
+* Fix bugs (Bao)
+* Add database and search functions (Akasaka).
+* Show capital request on console. Return HTTP/400 when capital request not found in HTTP request. 
