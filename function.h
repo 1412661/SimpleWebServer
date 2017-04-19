@@ -64,12 +64,11 @@ char* getRequestFile(char* msg);
  * @return Number of child process (exclude sh)
  */
 int countChildProcess(int parentPid);
-
 /**
- * Search captital by country
- * @param country
- * @return capital of the country, NULL if couldn't find
+ * Get country name in HTTP request
+ * @param HTTP request message
+ * @return Request country
  */
-char* searchCap(char* country);
+ char* getRequestCountry(char* msg);
 
 #endif // _FUNCTION_H_

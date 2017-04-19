@@ -182,7 +182,20 @@ char* getRequestFile(char* msg)
 
 	return file;
 }
-
+/**
+ * Get country name in HTTP request
+ * @param HTTP request message
+ * @return Request country
+ */
+char* getRequestCountry(char* msg)
+{
+    char* country= (char*)malloc(BUFFSIZE_VAR);
+    char* first = strstr(msg,"country=")+8;
+    char* last = strstr(msg,"&")-1;
+    country = clone(first,last-first+1,1);
+    country[last-first+1]='\0';
+    return country;
+} 
 /**
  * Count child processes of a parent process
  * @param Parent process ID
