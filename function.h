@@ -71,11 +71,5 @@ int countChildProcess(int parentPid);
  * @return capital of the country, NULL if couldn't find
  */
 char* searchCap(char* country);
-/**
- * Get country name in HTTP request
- * @param HTTP request message
- * @return Request country
- */
- char* getRequestCountry(char* msg);
 
 #endif // _FUNCTION_H_
