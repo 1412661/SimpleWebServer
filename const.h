@@ -9,13 +9,16 @@
 
 //#define INDEX_FILE	"index.html"
 #define INDEX_FILE		"country.html"
-#define BUFFSIZE_DATA 	1000			// Max buffer size for data
-#define BUFFSIZE_VAR	100			// Max buffer size for variables
-#define REGEX_MAX_MATCH 50			// Max regular expression matching group (include
-									// full match and group match)
-#define MSSV 			"1412661"	// My student code
+#define BUFFSIZE_DATA 	1024			// Max buffer size for data
+#define BUFFSIZE_VAR	100				// Max buffer size for variables
+#define REGEX_MAX_MATCH 50				// Max regular expression matching group (include
+										// full match and group match)
+#define MSSV 			"1412661"		// My student code
 
-#define HTTP_200	"HTTP/1.0 200 OK\n"
+#define DEFAULT_PORT	9999
+#define CONNMAX 50
+
+#define HTTP_200	"HTTP/1.0 200 OK\n\n"
 #define HTTP_400	"HTTP/1.0 400 Bad Request\n"
 #define HTTP_403	"HTTP/1.0 403 Forbidden\n"
 #define HTTP_404	"HTTP/1.0 404 Not Found\n"

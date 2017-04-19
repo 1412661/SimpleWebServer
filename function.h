@@ -14,7 +14,7 @@
  * @param format of output strings
  * @param list of variable for output
  */
-//void error(const char *format, ...);
+void error(const char *format, ...);
 
 /**
  * Clone a memory space
@@ -51,8 +51,31 @@ unsigned int hex(char* str, char* end);
  */
 int regexCheck(char* data, char* regexString);
 
-
+/**
+ * Get request file in HTTP request
+ * @param HTTP request message
+ * @return Requested file
+ */
 char* getRequestFile(char* msg);
+
+/**
+ * Count child processes of a parent process
+ * @param Parent process ID
+ * @return Number of child process (exclude sh)
+ */
 int countChildProcess(int parentPid);
+
+/**
+ * Search captital by country
+ * @param country
+ * @return capital of the country, NULL if couldn't find
+ */
+char* searchCap(char* country);
+/**
+ * Get country name in HTTP request
+ * @param HTTP request message
+ * @return Request country
+ */
+ char* getRequestCountry(char* msg);
 
 #endif // _FUNCTION_H_

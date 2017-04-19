@@ -1,16 +1,20 @@
 /*
-AUTHOR: Abhijeet Rastogi (http://www.google.com/profiles/abhijeet.1989)
 
-This is a very simple HTTP server. Default port is 10000 and ROOT for the server is your current working directory..
+This is a very simple HTTP server. Default port is 9999
 
-You can provide command line arguments like:- $./a.aout -p [port] -r [path]
+You can provide command line arguments like:- $./a.aout -p [port]
 
-for ex.
-$./a.out -p 50000 -r /home/
-to start a server at port 50000 with root directory as "/home"
+to start a server at port 50000:
+$ ./webserver -p 50000
 
-$./a.out -r /home/shadyabhi
-starts the server at port 10000 with ROOT as /home/shadyabhi
+
+http://stackoverflow.com/questions/9681531/graceful-shutdown-server-socket-in-linux
+- prevent accept() from adding more clientfd
+- have a list of the open sockets somewhere and to wait until they are all properly closed which means:
+	+ using shutdown() to tell the client that you will no longer work on that socket
+	+ call read() for a while to make sure that all the client has sent in the meantime has been pulled
+	+ then using close() to free each client socket.
+- THEN, you can safely close() the listening socket.
 
 */
 
@@ -32,90 +36,71 @@ starts the server at port 10000 with ROOT as /home/shadyabhi
 #include "http.h"
 #include "function.h"
 
-
-#define CONNMAX 50
-#define BYTES 1024
-
+// Send 10 request/s to the server
 // watch -n 0.1 wget --delete-after http://localhost:9999
 
-char *ROOT;
-int listenfd;
-void error(char *);
+int parentPID;
+int socketfd;
 void startServer(int);
-void respond(int);
-int PORT = 9999;
+void respond(int,int);
 
 static volatile int keepRunning = 1;
 
 void intHandler()
 {
-	printf("\nCtrl + C catched !\n");
-    keepRunning = 0;
+	if (getpid() != parentPID)
+		return;
 
+    printf("\nCtrl + C catched !\n");
     printf("Waiting for all sockets to be closed...\n");
+
     int childProc =  countChildProcess(getpid());
     printf("Current child process: %d\n", childProc);
     while (childProc > 0)
-	{
-		childProc =  countChildProcess(getpid());
-        printf("Current child process: %d\n", childProc);
-	}
+    {
+        childProc =  countChildProcess(getpid());
+        //printf("Current child process: %d\n", childProc);
+    }
 
-    close(listenfd);
-	printf("Socket listening at port %d has been closed\n", PORT);
+    close(socketfd);	// accept() will return -1
+    printf("Socket server offline\n");
 
-    exit(0);
+	//Prevent from accpenting any more connection
+    keepRunning = 0;
 }
 
 int main(int argc, char* argv[])
 {
-	signal(SIGINT, intHandler);
+	// Get PID of parent process
+	parentPID = getpid();
 
-    struct sockaddr_in clientaddr;
-    socklen_t addrlen;
-    char c;
+    signal(SIGINT, intHandler);
 
-    int slot=0;
+    int port = DEFAULT_PORT;
+    if (argc == 2)
+		port = atoi(argv[1]);
 
-    //Parsing the command line arguments
-    while ((c = getopt (argc, argv, "p:r:")) != -1)
-        switch (c)
-        {
-        case 'r':
+    startServer(port);
 
-            break;
-        case 'p':
-            PORT = atoi(optarg);
-            break;
-        case '?':
-            fprintf(stderr,"Wrong arguments given!!!\n");
-            exit(1);
-        default:
-            exit(1);
-        }
-
-    printf("Server started at port %s%d%s width pid=%s%d%s\n","\033[92m",PORT,"\033[0m", "\033[92m",getpid(),"\033[0m");
-    // Setting all elements to -1: signifies there is no client connected
-    int i;
-
-    startServer(PORT);
-
-    // ACCEPT connections
-    while (keepRunning)
+    while (keepRunning == 1)
     {
-        addrlen = sizeof(clientaddr);
-        int clients = accept(listenfd, (struct sockaddr *) &clientaddr, &addrlen);
+        struct sockaddr_in clientaddr;
+        socklen_t addrlen = sizeof(clientaddr);
+        printf("Waiting for new connection...\n");
+        int clientfd = accept(socketfd, (struct sockaddr *) &clientaddr, &addrlen);
 
-        if (clients < 0)
-            error ("accept() error");
-        else
+        int childProc =  countChildProcess(getpid());
+        if (clientfd >= 0)
         {
+        	printf("Connection with descriptor %d is accepted\n", clientfd);
             // On success, the PID of the child process is returned in the parent,
             // and 0 is returned in the child
+            // at parent process, fork() == 0 return 0
+            // at child process, fork() == 0 return 1
             if (fork() == 0)
             {
-                respond(clients);
-                exit(0);
+                respond(clientfd, childProc);
+                break;
             }
         }
     }
@@ -123,98 +108,94 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-/*
-
-prevent accept() from adding more clients
-have a list of the open sockets somewhere and to wait until they are all properly closed which means:
-	using shutdown() to tell the client that you will no longer work on that socket
-	call read() for a while to make sure that all the client has sent in the meantime has been pulled
-	then using close() to free each client socket.
-THEN, you can safely close() the listening socket.
-*/
-
-
-//start server
 void startServer(int port)
 {
-    char cport[5];
-    snprintf(cport, 5, "%d", port);
+    struct sockaddr_in serv_addr;
 
-    struct addrinfo hints;
-    struct addrinfo *res, *p;
+    socketfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketfd < 0)
+        error("socket(): could not initialize socket");
 
-    // getaddrinfo for host
-    memset (&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-    if (getaddrinfo( NULL, cport, &hints, &res) != 0)
-    {
-        perror ("getaddrinfo() error");
-        exit(1);
-    }
-    // socket and bind
-    for (p = res; p != NULL; p = p->ai_next)
-    {
-        listenfd = socket(p->ai_family, p->ai_socktype, 0);
-        if (listenfd == -1)
-			continue;
+    bzero((char*)&serv_addr, sizeof(serv_addr));
 
-        if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0)
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+
+    // When port is used by another program or not release by OS,
+    // switch to another port (port--)
+    while (1)
+	{
+		serv_addr.sin_port = htons(port);
+		if (bind(socketfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+			printf("bind(): could not bind socket at port %d\n", port--);
+        else
 			break;
-    }
+	}
 
-    if (!p)
-    {
-        perror ("socket() or bind()");
-        exit(1);
-    }
+    if (listen(socketfd, BUFFSIZE_DATA) != 0)
+		error("listen(): could not listen socket");
 
-    freeaddrinfo(res);
-
-    // listen for incoming connections
-    if ( listen (listenfd, 1000000) != 0 )
-    {
-        perror("listen() error");
-        exit(1);
-    }
+	printf("Socket server started at port %s%d%s width pid %s%d%s\n", "\033[92m", port, "\033[0m", "\033[92m", getpid(), "\033[0m");
 }
 
 //client connection
-void respond(int clients)
+void respond(int clientfd, int connections)
 {
-    char *mesg = (char*)malloc(BUFFSIZE_DATA);
-    memset(mesg, 0, BUFFSIZE_DATA);
+	if (connections > CONNMAX)
+	{
+		write(clientfd, HTTP_429, strlen(HTTP_429));
+		close(clientfd);
+		return;
+	}
 
-    char *returnData;
-    char* requestFile;
-	int bytes;
-	int fileDescriptor;
+    char mesg[BUFFSIZE_DATA] = "";
+    char returnData[BUFFSIZE_DATA] = "";
 
-    int rcvd = recv(clients, mesg, BUFFSIZE_DATA, 0);
+    char* file;
+    char* country;
+    int f, bytes;
+
+    int rcvd = recv(clientfd, mesg, BUFFSIZE_DATA, 0);
     if (rcvd < 0)
         fprintf(stderr,("recv() error\n"));
     else if (rcvd == 0)
         fprintf(stderr,"Client disconnected upexpectedly.\n");
     else
     {
-		printf("<!-- Message begin: -->\n%s<!-- Message end -->\n", mesg);
+        printf("<!-- Message begin: -->\n%s<!-- Message end -->\n", mesg);
 
-        requestFile = getRequestFile(mesg);
-        printf("Requested file: |%s|\n", requestFile);
-		fileDescriptor = open(requestFile, O_RDONLY);
-        if (fileDescriptor != -1)    //FILE FOUND
+        // REQUEST FILE AND REQUEST COUNTRY
+        if (strstr(mesg,"request.php")== NULL)
         {
-        	returnData = (char*)malloc(BUFFSIZE_VAR);
-            send(clients, HTTP_200, strlen(HTTP_200), 0);
-            while ((bytes = read(fileDescriptor, returnData, BUFFSIZE_VAR)) > 0)
-                write(clients, returnData, bytes);
+            file = getRequestFile(mesg);
+            printf("Requested file: |%s|\n", file);
+
+
+            if ((f = open(file, O_RDONLY)) == -1)
+                write(clientfd, HTTP_404, strlen(HTTP_404));
+            else
+            {
+                send(clientfd, HTTP_200, strlen(HTTP_200), 0);
+                while ((bytes = read(f, returnData, BUFFSIZE_DATA)) > 0)
+                {
+                    printf("Byte wrote: %d\n", write(clientfd, returnData, bytes));
+                }
+            }
         }
         else
-            write(clients, HTTP_404, strlen(HTTP_404)); //FILE NOT FOUND
+        {
+            country = getRequestCountry(mesg);
+            printf("Requested Country: |%s|\n",country);
+            if (strcmp(country,"Vietnam")==0)
+                printf("Thu do:Hanoi\n");
+            else
+                write(clientfd, HTTP_400,strlen(HTTP_400));
+        }
     }
 
-    free(requestFile);
-    shutdown(clients, SHUT_RDWR);         //All further send and recieve operations are DISABLED...
-    close(clients);
+    free(file);
+    shutdown(clientfd, SHUT_RDWR);         // All further send and recieve operations are DISABLED...
+    close(clientfd);
+
+    printf("Current connection is closed\n");
 }

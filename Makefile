@@ -28,4 +28,4 @@ Debug:
 
 clean:
 	@rm *.save 2> /dev/null
-	@rm *.o 2> /dev/null
+	@rm ValgrindOut.xml 2> /dev/null

@@ -32,7 +32,6 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="README.md" />
 		<Unit filename="const.h" />
 		<Unit filename="function.c">
 			<Option compilerVar="CC" />
