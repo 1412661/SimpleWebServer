@@ -95,8 +95,6 @@ int main(int argc, char* argv[])
         	printf("Connection with descriptor %d is accepted\n", clientfd);
             // On success, the PID of the child process is returned in the parent,
             // and 0 is returned in the child
-            // at parent process, fork() == 0 return 0
-            // at child process, fork() == 0 return 1
             if (fork() == 0)
             {
                 respond(clientfd, childProc);
@@ -108,6 +106,10 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+
+
+
+//start server
 void startServer(int port)
 {
     struct sockaddr_in serv_addr;
@@ -121,8 +123,7 @@ void startServer(int port)
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
 
-    // When port is used by another program or not release by OS,
-    // switch to another port (port--)
+    // When 
     while (1)
 	{
 		serv_addr.sin_port = htons(port);
@@ -131,6 +132,7 @@ void startServer(int port)
         else
 			break;
 	}
+
 
     if (listen(socketfd, BUFFSIZE_DATA) != 0)
 		error("listen(): could not listen socket");
