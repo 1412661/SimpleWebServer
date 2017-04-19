@@ -18,7 +18,6 @@ Tutorial:
 - [Sổ tay Git](http://rogerdudler.github.io/git-guide/index.vi.html)
 
 # Usage
----------------------
 
 ## Building from reposity
 
