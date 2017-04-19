@@ -21,17 +21,19 @@ Tutorial:
 
 ## Building from reposity
 
-    $ make
+    make
 
 ## Run program
 
 To run the program at default port 999
 
-    $ ./webserver
+    ./webserver
 To run the program at a specific port, use option -p
 
-    $ ./webserver -p <port>
+    ./webserver -p <port>
     
 ## Live demo
 
 Please take a look at [http://webserver.baonq.xyz:9999](http://webserver.baonq.xyz:9999)
+
+Live demo will be updated and recompiled hourly from source code from GitHub
