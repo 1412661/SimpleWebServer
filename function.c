@@ -190,7 +190,7 @@ char* getRequestFile(char* msg)
 char* getRequestCountry(char* msg)
 {
     char* country= (char*)malloc(BUFFSIZE_VAR);
-    char* first = strstr(msg,"=")+1;
+    char* first = strstr(msg,"country=")+8;
     char* last = strstr(msg,"&")-1;
     country = clone(first,last-first+1,1);
     country[last-first+1]='\0';
