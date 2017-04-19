@@ -11,6 +11,5 @@ Socket example code:
 Task:
 * Fix bugs (Bao)
 * Add database and search functions (Akasaka).
-* Show capital request on console. Return HTTP/400 when capital request not found in HTTP request. 
-=======
->>>>>>> 437043c9d9f9d6feda828b934c4157cbc3ea872c
+* Show capital request on console. Return HTTP/400 when capital request not found in HTTP request. (Danh)
+
