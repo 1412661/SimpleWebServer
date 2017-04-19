@@ -5,7 +5,7 @@ This is a very simple HTTP server. Default port is 9999
 You can provide command line arguments like:- $./a.aout -p [port]
 
 to start a server at port 50000:
-$ ./webserver -p 50000
+$ ./webserver.out -p 50000
 
 
 http://stackoverflow.com/questions/9681531/graceful-shutdown-server-socket-in-linux
@@ -36,7 +36,7 @@ http://stackoverflow.com/questions/9681531/graceful-shutdown-server-socket-in-li
 #include "http.h"
 #include "function.h"
 
-// Send 10 request/s to the server
+
 // watch -n 0.1 wget --delete-after http://localhost:9999
 
 int parentPID;
@@ -95,8 +95,6 @@ int main(int argc, char* argv[])
         	printf("Connection with descriptor %d is accepted\n", clientfd);
             // On success, the PID of the child process is returned in the parent,
             // and 0 is returned in the child
-            // at parent process, fork() == 0 return 0
-            // at child process, fork() == 0 return 1
             if (fork() == 0)
             {
                 respond(clientfd, childProc);
@@ -108,6 +106,10 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+
+
+
+//start server
 void startServer(int port)
 {
     struct sockaddr_in serv_addr;
@@ -121,8 +123,6 @@ void startServer(int port)
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
 
-    // When port is used by another program or not release by OS,
-    // switch to another port (port--)
     while (1)
 	{
 		serv_addr.sin_port = htons(port);
@@ -131,6 +131,7 @@ void startServer(int port)
         else
 			break;
 	}
+
 
     if (listen(socketfd, BUFFSIZE_DATA) != 0)
 		error("listen(): could not listen socket");
@@ -152,6 +153,7 @@ void respond(int clientfd, int connections)
     char returnData[BUFFSIZE_DATA] = "";
 
     char* file;
+    char* country;
     int f, bytes;
 
     int rcvd = recv(clientfd, mesg, BUFFSIZE_DATA, 0);
@@ -162,21 +164,33 @@ void respond(int clientfd, int connections)
     else
     {
         printf("<!-- Message begin: -->\n%s<!-- Message end -->\n", mesg);
+        // REQUEST FILE AND REQUEST COUNTRY
+        if (strstr(mesg,"request.php")== NULL)
+        {
+            file = getRequestFile(mesg);
+            printf("Requested file: |%s|\n", file);
 
-        file = getRequestFile(mesg);
-        printf("Requested file: |%s|\n", file);
 
-
-        if ((f = open(file, O_RDONLY)) == -1)
-			write(clientfd, HTTP_404, strlen(HTTP_404));
-		else
-		{
-            send(clientfd, HTTP_200, strlen(HTTP_200), 0);
-            while ((bytes = read(f, returnData, BUFFSIZE_DATA)) > 0)
-			{
-				printf("Byte wrote: %d\n", write(clientfd, returnData, bytes));
-			}
-		}
+            if ((f = open(file, O_RDONLY)) == -1)
+                write(clientfd, HTTP_404, strlen(HTTP_404));
+            else
+            {
+                send(clientfd, HTTP_200, strlen(HTTP_200), 0);
+                while ((bytes = read(f, returnData, BUFFSIZE_DATA)) > 0)
+                {
+                    printf("Byte wrote: %d\n", write(clientfd, returnData, bytes));
+                }
+            }
+        }
+        else
+        {
+            country = getRequestCountry(mesg);
+            printf("Requested Country: |%s|\n",country);
+            if (strcmp(country,"Vietnam")==0)
+                printf("Thu do:Hanoi\n");
+            else
+                write(clientfd, HTTP_400,strlen(HTTP_400));
+        }
     }
 
     free(file);
