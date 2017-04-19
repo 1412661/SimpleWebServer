@@ -4,6 +4,7 @@
 
 [Reference source code](http://blog.abhijeetr.com/2010/04/very-simple-http-server-writen-in-c.html)
 
+
 Socket example code:
 * Server: [server.c](http://www.linuxhowtos.org/data/6/server.c)
 
@@ -12,3 +13,10 @@ Task:
 * Add database and search functions (Akasaka).
 * Show capital request on console. Return HTTP/400 when capital request not found in HTTP request. (Danh)
 
+How to syncing a fork
+* Step 1: [Configuring a remote for a fork](https://help.github.com/articles/configuring-a-remote-for-a-fork/#platform-linux)
+* Step 2: [Syncing a fork](https://help.github.com/articles/syncing-a-fork/#platform-linux)
+* Step 3: Push your code in local to your reposity
+
+
+[Git 101](http://rogerdudler.github.io/git-guide/index.vi.html)
