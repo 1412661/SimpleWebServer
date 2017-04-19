@@ -202,21 +202,3 @@ int countChildProcess(int parentPid)
     // Don't yourself when executing a bash script
     return strtol(countc, NULL, 10) - 1;
 }
-/**
- * Get country name in HTTP request
- * @param HTTP request message
- * @return Request country
- */
-char* getRequestCountry(char* msg)
-{
-    char* country= (char*)malloc(BUFFSIZE_VAR);
-    char* first = strstr(msg,"country=")+8;
-    char* last;
-    if (strstr(msg,"&")==NULL)
-        last = strstr(msg," HTTP")-1;
-    else
-        last = strstr(msg,"&")-1;
-    country = clone(first,last-first+1,1);
-    country[last-first+1]='\0';
-    return country;
-} 
