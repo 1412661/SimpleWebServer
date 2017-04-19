@@ -6,6 +6,3 @@
 
 Socket example code:
 * Server: [server.c](http://www.linuxhowtos.org/data/6/server.c)
-
-Task:
-* Fix bug (Bao)
