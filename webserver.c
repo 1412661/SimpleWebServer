@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
         int childProc =  countChildProcess(getpid());
         if (clientfd >= 0)
         {
-        	printf("Connection with descriptor %d is accepted\n", clientfd);
+        	//printf("Connection with descriptor %d is accepted\n", clientfd);
             // On success, the PID of the child process is returned in the parent,
             // and 0 is returned in the child
             // at parent process, fork() == 0 return 0
@@ -157,45 +157,36 @@ void respond(int clientfd, int connections)
 
     int rcvd = recv(clientfd, mesg, BUFFSIZE_DATA, 0);
     if (rcvd < 0)
-        fprintf(stderr,("recv() error\n"));
+        fprintf(stderr, ("recv() error\n"));
     else if (rcvd == 0)
-        fprintf(stderr,"Client disconnected upexpectedly.\n");
+        fprintf(stderr, "Client disconnected upexpectedly.\n");
     else
     {
         printf("<!-- Message begin: -->\n%s<!-- Message end -->\n", mesg);
 
-        // REQUEST FILE AND REQUEST COUNTRY
-        if (strstr(mesg,"request.php")== NULL)
-        {
-            file = getRequestFile(mesg);
-            printf("Requested file: |%s|\n", file);
+		file = getRequestFile(mesg);
+		country = getRequestCountry(mesg);
 
+		printf("Requested file: |%s|\n", file);
+		printf("Requested country: |%s|\n", country);
 
-            if ((f = open(file, O_RDONLY)) == -1)
-                write(clientfd, HTTP_404, strlen(HTTP_404));
-            else
-            {
-                send(clientfd, HTTP_200, strlen(HTTP_200), 0);
-                while ((bytes = read(f, returnData, BUFFSIZE_DATA)) > 0)
-                {
-                    printf("Byte wrote: %d\n", write(clientfd, returnData, bytes));
-                }
-            }
-        }
-        else
-        {
-            country = getRequestCountry(mesg);
-            printf("Requested Country: |%s|\n",country);
-            if (strcmp(country,"Vietnam")==0)
-                printf("Thu do:Hanoi\n");
-            else
-                write(clientfd, HTTP_400,strlen(HTTP_400));
-        }
+		if ((f = open(file, O_RDONLY)) == -1)
+			write(clientfd, HTTP_404, strlen(HTTP_404));
+		else
+		{
+			send(clientfd, HTTP_200, strlen(HTTP_200), 0);
+			while ((bytes = read(f, returnData, BUFFSIZE_DATA)) > 0)
+			{
+				//printf("Byte wrote: %d\n", write(clientfd, returnData, bytes));
+				write(clientfd, returnData, bytes);
+			}
+		}
+
     }
 
     free(file);
     shutdown(clientfd, SHUT_RDWR);         // All further send and recieve operations are DISABLED...
     close(clientfd);
 
-    printf("Current connection is closed\n");
+    //printf("Current connection is closed\n");
 }

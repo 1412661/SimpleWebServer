@@ -174,11 +174,13 @@ char* getRequestFile(char* msg)
         return file;
 	}
 
-	char* first = strstr(msg, "/") + 1;
-    char* last = strstr(first, " ") - 1;
+	file = strstr(msg, "/") + 1;
+    int size = 0;	// size of file string
+    while (file[size] != ' ' && file[size] != '?')
+        size++;
 
-    file = clone(first, last-first+1, 1);
-    file[last-first+1] = '\0';
+    file = clone(file, size, 1);
+    file[size] = '\0';
 
 	return file;
 }
@@ -209,14 +211,17 @@ int countChildProcess(int parentPid)
  */
 char* getRequestCountry(char* msg)
 {
-    char* country= (char*)malloc(BUFFSIZE_VAR);
-    char* first = strstr(msg,"country=")+8;
-    char* last;
-    if (strstr(msg,"&")==NULL)
-        last = strstr(msg," HTTP")-1;
-    else
-        last = strstr(msg,"&")-1;
-    country = clone(first,last-first+1,1);
-    country[last-first+1]='\0';
+    if (strstr(msg, "GET /result.html") == NULL)
+        return NULL;
+
+    char* country = strstr(msg, "country=") + 8;
+
+    int size = 0;	// size of country string
+    while (country[size] != ' ' && country != '&')
+        size++;
+
+    country = clone(country, size, 1);
+    country[size] = '\0';
+
     return country;
-} 
+}
