@@ -181,6 +181,7 @@ void respond(int clientfd, int connections)
                     printf("Byte wrote: %d\n", write(clientfd, returnData, bytes));
                 }
             }
+            free(file);
         }
         else
         {
@@ -190,10 +191,11 @@ void respond(int clientfd, int connections)
                 printf("Thu do:Hanoi\n");
             else
                 write(clientfd, HTTP_400,strlen(HTTP_400));
+            free(country);
         }
     }
 
-    free(file);
+    
     shutdown(clientfd, SHUT_RDWR);         // All further send and recieve operations are DISABLED...
     close(clientfd);
 
