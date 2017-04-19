@@ -152,6 +152,7 @@ void respond(int clientfd, int connections)
     char returnData[BUFFSIZE_DATA] = "";
 
     char* file;
+    char* country;
     int f, bytes;
 
     int rcvd = recv(clientfd, mesg, BUFFSIZE_DATA, 0);
@@ -163,20 +164,33 @@ void respond(int clientfd, int connections)
     {
         printf("<!-- Message begin: -->\n%s<!-- Message end -->\n", mesg);
 
-        file = getRequestFile(mesg);
-        printf("Requested file: |%s|\n", file);
+        // REQUEST FILE AND REQUEST COUNTRY
+        if (strstr(mesg,"request.php")== NULL)
+        {
+            file = getRequestFile(mesg);
+            printf("Requested file: |%s|\n", file);
 
 
-        if ((f = open(file, O_RDONLY)) == -1)
-			write(clientfd, HTTP_404, strlen(HTTP_404));
-		else
-		{
-            send(clientfd, HTTP_200, strlen(HTTP_200), 0);
-            while ((bytes = read(f, returnData, BUFFSIZE_DATA)) > 0)
-			{
-				printf("Byte wrote: %d\n", write(clientfd, returnData, bytes));
-			}
-		}
+            if ((f = open(file, O_RDONLY)) == -1)
+                write(clientfd, HTTP_404, strlen(HTTP_404));
+            else
+            {
+                send(clientfd, HTTP_200, strlen(HTTP_200), 0);
+                while ((bytes = read(f, returnData, BUFFSIZE_DATA)) > 0)
+                {
+                    printf("Byte wrote: %d\n", write(clientfd, returnData, bytes));
+                }
+            }
+        }
+        else
+        {
+            country = getRequestCountry(mesg);
+            printf("Requested Country: |%s|\n",country);
+            if (strcmp(country,"Vietnam")==0)
+                printf("Thu do:Hanoi\n");
+            else
+                write(clientfd, HTTP_400,strlen(HTTP_400));
+        }
     }
 
     free(file);
