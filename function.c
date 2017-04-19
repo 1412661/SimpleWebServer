@@ -19,8 +19,8 @@
  * @param format of output strings
  * @param list of variable for output
  */
-//void error(const char *format, ...)
-//{
+void error(const char *format, ...)
+{
     /**
     * Example use:
     * error("Could not open file", "test.txt", " for writing");
@@ -28,16 +28,16 @@
     * Critical error: Could not open file test.txt for writing
     */
 
-//    va_list arg;
+    va_list arg;
 
-//    va_start(arg, format);
-//    fprintf(stderr, "Critical error: ");
-//    vfprintf(stderr, format, arg);
-//    fprintf(stderr, "\n");
-//    va_end(arg);
+    va_start(arg, format);
+    fprintf(stderr, "Critical error: ");
+    vfprintf(stderr, format, arg);
+    fprintf(stderr, "\n");
+    va_end(arg);
 
-//    exit(EXIT_FAILURE);
-//}
+    exit(1);
+}
 
 /**
  * Clone a memory space
@@ -158,7 +158,11 @@ struct List* parseByRegex(char* regexString, char* string, unsigned int* nCaptur
 }
 
 
-
+/**
+ * Get request file in HTTP request
+ * @param HTTP request message
+ * @return Requested file
+ */
 char* getRequestFile(char* msg)
 {
 	char* file;
@@ -179,8 +183,11 @@ char* getRequestFile(char* msg)
 	return file;
 }
 
-
-
+/**
+ * Count child processes of a parent process
+ * @param Parent process ID
+ * @return Number of child process (exclude sh)
+ */
 int countChildProcess(int parentPid)
 {
 	char command[BUFFSIZE_VAR] = "";
@@ -190,6 +197,8 @@ int countChildProcess(int parentPid)
 
 	FILE* f = popen(command, "r");
     fgets(countc, sizeof(countc), f);
+    fclose(f);
 
+    // Don't yourself when executing a bash script
     return strtol(countc, NULL, 10) - 1;
 }

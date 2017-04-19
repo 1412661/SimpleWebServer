@@ -1,10 +1,20 @@
 /*
+
 This is a very simple HTTP server. Default port is 9999
 
 You can provide command line arguments like:- $./a.aout -p [port]
 
 to start a server at port 50000:
 $ ./webserver.out -p 50000
+
+
+http://stackoverflow.com/questions/9681531/graceful-shutdown-server-socket-in-linux
+- prevent accept() from adding more clientfd
+- have a list of the open sockets somewhere and to wait until they are all properly closed which means:
+	+ using shutdown() to tell the client that you will no longer work on that socket
+	+ call read() for a while to make sure that all the client has sent in the meantime has been pulled
+	+ then using close() to free each client socket.
+- THEN, you can safely close() the listening socket.
 
 */
 
@@ -26,9 +36,7 @@ $ ./webserver.out -p 50000
 #include "http.h"
 #include "function.h"
 
-
 #define CONNMAX 50
-#define BYTES 1024
 
 // watch -n 0.1 wget --delete-after http://localhost:9999
 
@@ -41,9 +49,8 @@ static volatile int keepRunning = 1;
 void intHandler()
 {
     printf("\nCtrl + C catched !\n");
-    keepRunning = 0;
-
     printf("Waiting for all sockets to be closed...\n");
+
     int childProc =  countChildProcess(getpid());
     printf("Current child process: %d\n", childProc);
     while (childProc > 0)
@@ -52,20 +59,16 @@ void intHandler()
         //printf("Current child process: %d\n", childProc);
     }
 
-    char buffer[BUFFSIZE_VAR];
-    while (read(socketfd, buffer, BUFFSIZE_VAR) > 0)
-    {
-
-    }
-
-    close(socketfd);
+    close(socketfd);	// accept() will return -1
     printf("Socket server offline\n");
+
+	//Prevent from accpenting any more connection
+    keepRunning = 0;
 }
 
 int main(int argc, char* argv[])
 {
     signal(SIGINT, intHandler);
-
 
     int port = DEFAULT_PORT;
     if (argc == 2)
@@ -73,21 +76,20 @@ int main(int argc, char* argv[])
 
     startServer(port);
 
-    // ACCEPT connections
     while (keepRunning == 1)
     {
         struct sockaddr_in clientaddr;
         socklen_t addrlen = sizeof(clientaddr);
-        int clients = accept(socketfd, (struct sockaddr *) &clientaddr, &addrlen);
+        int clientfd = accept(socketfd, (struct sockaddr *) &clientaddr, &addrlen);
 
-        if (clients >= 0)
+        if (clientfd >= 0)
         {
             // On success, the PID of the child process is returned in the parent,
             // and 0 is returned in the child
             if (fork() == 0)
             {
-                respond(clients);
-                exit(0);
+                respond(clientfd);
+                break;
             }
         }
     }
@@ -95,15 +97,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-/*
 
-prevent accept() from adding more clients
-have a list of the open sockets somewhere and to wait until they are all properly closed which means:
-	using shutdown() to tell the client that you will no longer work on that socket
-	call read() for a while to make sure that all the client has sent in the meantime has been pulled
-	then using close() to free each client socket.
-THEN, you can safely close() the listening socket.
-*/
 
 
 //start server
@@ -131,7 +125,7 @@ void startServer(int port)
 }
 
 //client connection
-void respond(int clients)
+void respond(int clientfd)
 {
     char *mesg = (char*)malloc(BUFFSIZE_DATA);
     memset(mesg, 0, BUFFSIZE_DATA);
@@ -141,7 +135,7 @@ void respond(int clients)
     int bytes;
     int fileDescriptor;
 
-    int rcvd = recv(clients, mesg, BUFFSIZE_DATA, 0);
+    int rcvd = recv(clientfd, mesg, BUFFSIZE_DATA, 0);
     if (rcvd < 0)
         fprintf(stderr,("recv() error\n"));
     else if (rcvd == 0)
@@ -156,15 +150,15 @@ void respond(int clients)
         if (fileDescriptor != -1)    //FILE FOUND
         {
             returnData = (char*)malloc(BUFFSIZE_VAR);
-            send(clients, HTTP_200, strlen(HTTP_200), 0);
+            send(clientfd, HTTP_200, strlen(HTTP_200), 0);
             while ((bytes = read(fileDescriptor, returnData, BUFFSIZE_VAR)) > 0)
-                write(clients, returnData, bytes);
+                write(clientfd, returnData, bytes);
         }
         else
-            write(clients, HTTP_404, strlen(HTTP_404)); //FILE NOT FOUND
+            write(clientfd, HTTP_404, strlen(HTTP_404)); //FILE NOT FOUND
     }
 
     free(requestFile);
-    shutdown(clients, SHUT_RDWR);         //All further send and recieve operations are DISABLED...
-    close(clients);
+    shutdown(clientfd, SHUT_RDWR);         // All further send and recieve operations are DISABLED...
+    close(clientfd);
 }
