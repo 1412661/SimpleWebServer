@@ -20,3 +20,4 @@ How to syncing a fork
 
 
 [Git 101](http://rogerdudler.github.io/git-guide/index.vi.html)
+Poll,epoll: http://man7.org/linux/man-pages/man2/poll.2.html
