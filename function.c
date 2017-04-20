@@ -174,11 +174,13 @@ char* getRequestFile(char* msg)
         return file;
 	}
 
-	char* first = strstr(msg, "/") + 1;
-    char* last = strstr(first, " ") - 1;
+	file = strstr(msg, "/") + 1;
+    int size = 0;	// size of file string
+    while (file[size] != ' ' && file[size] != '?')
+        size++;
 
-    file = clone(first, last-first+1, 1);
-    file[last-first+1] = '\0';
+    file = clone(file, size, 1);
+    file[size] = '\0';
 
 	return file;
 }
@@ -201,4 +203,25 @@ int countChildProcess(int parentPid)
 
     // Don't yourself when executing a bash script
     return strtol(countc, NULL, 10) - 1;
+}
+/**
+ * Get country name in HTTP request
+ * @param HTTP request message
+ * @return Request country
+ */
+char* getRequestCountry(char* msg)
+{
+    if (strstr(msg, "GET /result.html") == NULL)
+        return NULL;
+
+    char* country = strstr(msg, "country=") + 8;
+
+    int size = 0;	// size of country string
+    while (country[size] != ' ' && country != '&')
+        size++;
+
+    country = clone(country, size, 1);
+    country[size] = '\0';
+
+    return country;
 }
