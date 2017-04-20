@@ -18,6 +18,8 @@
 #define DEFAULT_PORT	9999
 #define CONNMAX 50
 
+#define DATABASE    "list.txt"			// File that store country and its capital
+
 #define HTTP_200	"HTTP/1.0 200 OK\n\n"
 #define HTTP_400	"HTTP/1.0 400 Bad Request\n"
 #define HTTP_403	"HTTP/1.0 403 Forbidden\n"
