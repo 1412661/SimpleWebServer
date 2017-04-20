@@ -225,3 +225,28 @@ char* getRequestCountry(char* msg)
 
     return country;
 }
+
+char* searchCap(char* country){
+	char *r, *temp;
+	FILE *f = fopen("list.txt", "rt");
+	if (!f){
+		printf("File not found.");
+	}
+	else{
+		while (!feof(f)){
+			r = (char *)malloc(255 * sizeof(char));
+			fgets(r, 255, f);
+			temp = (char *)malloc(strlen(r));
+			temp = strtok(r, ",");
+			if (strcmp(temp, country) == 0){
+				temp = strtok(NULL, "\n");
+				return temp;
+			}
+		}
+		fclose(f);
+		printf("\nFile is opened.\n");
+	}
+	free(r);
+	free(temp);
+	return NULL;
+}
