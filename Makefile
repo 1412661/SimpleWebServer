@@ -25,7 +25,3 @@ Debug:
 	$(CC) $(ARGS) -g -c linklist.c $(LIBS)
 	$(CC) $(ARGS) -g -o webserver webserver.o function.o http.o linklist.o $(LIBS)
 	@rm *.o
-
-clean:
-	@rm *.save 2> /dev/null
-	@rm ValgrindOut.xml 2> /dev/null

@@ -71,6 +71,13 @@ void intHandler()
 
 int main(int argc, char* argv[])
 {
+	char *cap = searchCap("Vietnam");
+	if (cap)
+    printf("%s\n", cap);
+    else
+	printf("Could not find cap");
+    return 0;
+
 	// Get PID of parent process
 	parentPID = getpid();
 

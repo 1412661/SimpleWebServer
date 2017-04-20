@@ -108,8 +108,8 @@ int regexCheck(char* data, char* regexString)
  */
 struct List* parseByRegex(char* regexString, char* string, unsigned int* nCaptureGroup)
 {
-	// If nCaptureGroup != 0, max capture group (regexMaxMatch) is nCaptureGroup
-	// otherwise use REGEX_MAX_MATCH
+    // If nCaptureGroup != 0, max capture group (regexMaxMatch) is nCaptureGroup
+    // otherwise use REGEX_MAX_MATCH
     unsigned int regexMaxMatch = REGEX_MAX_MATCH;
     if (nCaptureGroup != NULL)
         if (*nCaptureGroup != 0)
@@ -165,16 +165,16 @@ struct List* parseByRegex(char* regexString, char* string, unsigned int* nCaptur
  */
 char* getRequestFile(char* msg)
 {
-	char* file;
+    char* file;
 
-	if ((strstr(msg, "GET / HTTP") != NULL) || strstr(msg, "HEAD / HTTP") != NULL)
-	{
-		file = (char*)malloc(BUFFSIZE_VAR);
+    if ((strstr(msg, "GET / HTTP") != NULL) || strstr(msg, "HEAD / HTTP") != NULL)
+    {
+        file = (char*)malloc(BUFFSIZE_VAR);
         strcpy(file, INDEX_FILE);
         return file;
-	}
+    }
 
-	file = strstr(msg, "/") + 1;
+    file = strstr(msg, "/") + 1;
     int size = 0;	// size of file string
     while (file[size] != ' ' && file[size] != '?')
         size++;
@@ -182,7 +182,7 @@ char* getRequestFile(char* msg)
     file = clone(file, size, 1);
     file[size] = '\0';
 
-	return file;
+    return file;
 }
 
 /**
@@ -192,12 +192,12 @@ char* getRequestFile(char* msg)
  */
 int countChildProcess(int parentPid)
 {
-	char command[BUFFSIZE_VAR] = "";
-	char countc[BUFFSIZE_VAR];
+    char command[BUFFSIZE_VAR] = "";
+    char countc[BUFFSIZE_VAR];
 
     sprintf(command, "ps --ppid %d --no-headers | grep -v defunct | wc -l", parentPid);
 
-	FILE* f = popen(command, "r");
+    FILE* f = popen(command, "r");
     fgets(countc, sizeof(countc), f);
     fclose(f);
 
@@ -217,7 +217,7 @@ char* getRequestCountry(char* msg)
     char* country = strstr(msg, "country=") + 8;
 
     int size = 0;	// size of country string
-    while (country[size] != ' ' && country != '&')
+    while (country[size] != ' ' && country[size] != '&')
         size++;
 
     country = clone(country, size, 1);
@@ -226,27 +226,42 @@ char* getRequestCountry(char* msg)
     return country;
 }
 
-char* searchCap(char* country){
-	char *r, *temp;
-	FILE *f = fopen("list.txt", "rt");
-	if (!f){
-		printf("File not found.");
-	}
-	else{
-		while (!feof(f)){
-			r = (char *)malloc(255 * sizeof(char));
-			fgets(r, 255, f);
-			temp = (char *)malloc(strlen(r));
-			temp = strtok(r, ",");
-			if (strcmp(temp, country) == 0){
-				temp = strtok(NULL, "\n");
-				return temp;
-			}
+char* searchCap(char* country)
+{
+    FILE* f = fopen(DATABASE, "r");
+    if (f == NULL)
+		return NULL;
+
+    char* capital = NULL;		// return data
+	char* comma;				// pointer that point to the comma in each row in database
+	char* countryDatabase;		// country in database
+	char* capitalDatabase;		// capital in database
+
+    char buff[BUFFSIZE_VAR];
+
+    while (fgets(buff, BUFFSIZE_DATA, f) > 0)
+	{
+        comma = strstr(buff, ",");
+        if (comma == NULL)			// Problem in the database itself: a row in database doesn't contain comma
+		{
+			printf("Database is corrupted\n");
+			break;
 		}
-		fclose(f);
-		printf("\nFile is opened.\n");
+        countryDatabase = buff;
+        capitalDatabase = comma+1;
+        *comma = '\0';
+        *(strstr(capitalDatabase, "\r")) = '\0';
+
+        //printf("Comparing %s vs %s (%s) in DB\n", country, countryDatabase, capitalDatabase);
+        if (strcmp(countryDatabase, country) == 0)
+		{
+            capital = (char*)malloc(BUFFSIZE_VAR);
+            strcpy(capital, capitalDatabase);
+            break;
+		}
 	}
-	free(r);
-	free(temp);
-	return NULL;
+
+    fclose(f);
+
+    return capital;
 }
