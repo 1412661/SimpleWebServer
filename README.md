@@ -25,7 +25,7 @@ Tutorial:
 
 ## Run program
 
-To run the program at default port 999
+To run the program at default port 9999
 
     ./webserver
 To run the program at a specific port, use option -p

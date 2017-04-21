@@ -66,8 +66,6 @@ int countChildProcess(int parentPid)
 
     sprintf(command, "ps --ppid %d --no-headers | grep -v defunct | wc -l", parentPid);
 
-	system(command);
-
     FILE* f = popen(command, "r");
     fgets(countc, sizeof(countc), f);
     fclose(f);
