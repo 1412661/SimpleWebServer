@@ -7,13 +7,17 @@
  */
 
 
-//#define INDEX_FILE	"index.html"
-#define INDEX_FILE		"country.html"
+ #define DEBUG_MODE
+
+#define INDEX_FILE		"country.html"	// Index file of web server
 #define BUFFSIZE_DATA 	1024			// Max buffer size for data
-#define BUFFSIZE_VAR	100				// Max buffer size for variables
+#define BUFFSIZE_VAR	200				// Max buffer size for variables
 #define REGEX_MAX_MATCH 50				// Max regular expression matching group (include
 										// full match and group match)
 #define MSSV 			"1412661"		// My student code
+
+
+#define WORKING_FOLDER  "/home/quocbao/Code/HCMUS/LTM/SimpleWebServer/html"
 
 #define DEFAULT_PORT	9999
 #define CONNMAX 50
