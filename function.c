@@ -4,14 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <regex.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include "const.h"
-#include "linklist.h"
 #include "function.h"
 
 /**
@@ -70,11 +63,17 @@ int countChildProcess(int parentPid)
     char command[BUFFSIZE_VAR] = "";
     char countc[BUFFSIZE_VAR];
 
+
     sprintf(command, "ps --ppid %d --no-headers | grep -v defunct | wc -l", parentPid);
+
+	system(command);
 
     FILE* f = popen(command, "r");
     fgets(countc, sizeof(countc), f);
     fclose(f);
+
+	sprintf(command, "ps --ppid %d --no-headers | grep -v defunct", parentPid);
+	system(command);
 
     // Don't yourself when executing a bash script
     return strtol(countc, NULL, 10) - 1;

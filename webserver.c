@@ -1,12 +1,10 @@
 /*
 
 This is a very simple HTTP server. Default port is 9999
-
 You can provide command line arguments like:- $./a.aout -p [port]
 
 to start a server at port 50000:
 $ ./webserver -p 50000
-
 
 http://stackoverflow.com/questions/9681531/graceful-shutdown-server-socket-in-linux
 - prevent accept() from adding more clientfd
@@ -22,18 +20,11 @@ http://stackoverflow.com/questions/9681531/graceful-shutdown-server-socket-in-li
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <netdb.h>
 #include <signal.h>
-#include <stdarg.h>
-#include <fcntl.h>
 
-#include "linklist.h"
 #include "const.h"
-#include "http.h"
 #include "function.h"
 
 // Send 10 request/s to the server
@@ -59,9 +50,9 @@ void intHandler()
     while (childProc > 0)
     {
         childProc =  countChildProcess(getpid());
-        #ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
         printf("[INFO] Current child process: %d\n", childProc);
-        #endif // DEBUG_MODE
+#endif // DEBUG_MODE
     }
 
     close(socketfd);	// accept() will return -1
@@ -92,9 +83,9 @@ int main(int argc, char* argv[])
     {
         struct sockaddr_in clientaddr;
         socklen_t addrlen = sizeof(clientaddr);
-        #ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
         printf("[INFO] Waiting for new connection...\n");
-        #endif // DEBUG_MODE
+#endif // DEBUG_MODE
         int clientfd = accept(socketfd, (struct sockaddr *) &clientaddr, &addrlen);
 
         if (clientfd >= 0)
@@ -120,10 +111,9 @@ int main(int argc, char* argv[])
                 printf("[INFO] Connection with descriptor %d is accepted\n", clientfd);
 #endif // DEBUG_MODE
 
-                // On success, the PID of the child process is returned in the parent,
-                // and 0 is returned in the child
-                // at parent process, fork() == 0 return 0
-                // at child process, fork() == 0 return 1
+                // On success, the PID of the child process is returned by fork()
+                // fork() return 0 for the child
+                // fork() return pid of the child for the parent
                 if (fork() == 0)
                 {
 #ifdef DEBUG_MODE
@@ -146,7 +136,7 @@ void startServer(int port)
     if (socketfd < 0)
         printf("[ERROR] socket(): could not initialize socket");
 
-	struct sockaddr_in serv_addr;
+    struct sockaddr_in serv_addr;
     //bzero((char*)&serv_addr, sizeof(serv_addr));	// Set all byte to 0
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -195,9 +185,9 @@ void respond(int clientfd)
         char* file = getRequestFile(mesg);
         char *htmlFile = readFile(file);
 
-        #ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
         printf("[INFO] Request file in query string: %s\n", file);
-        #endif // DEBUG_MODE
+#endif // DEBUG_MODE
 
         if (htmlFile == NULL)
         {
@@ -242,6 +232,6 @@ void respond(int clientfd)
     close(clientfd);
 
 #ifdef DEBUG_MODE
-    printf("Connection at pid %d is closed\n", getpid());
+    printf("[INFO] Connection at pid %d is closed\n", getpid());
 #endif // DEBUG_MODE
 }

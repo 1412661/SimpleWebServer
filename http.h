@@ -1,4 +1,4 @@
-#ifndef _LINKLIST_H_
+fndef _LINKLIST_H_
 #define _LINKLIST_H_
 
 /**

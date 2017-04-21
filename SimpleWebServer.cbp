@@ -42,14 +42,6 @@
 		<Unit filename="html/country.html" />
 		<Unit filename="html/list.txt" />
 		<Unit filename="html/result.html" />
-		<Unit filename="http.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="http.h" />
-		<Unit filename="linklist.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="linklist.h" />
 		<Unit filename="sh/clean.sh" />
 		<Unit filename="sh/syncFork.sh" />
 		<Unit filename="webserver.c">

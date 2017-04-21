@@ -1,9 +1,6 @@
 #ifndef _FUNCTION_H_
 #define _FUNCTION_H_
 
-#include <stdarg.h>
-#include "const.h"
-
 /**
  * @file function.h
  * @brief Provide function prototype
