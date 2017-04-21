@@ -70,6 +70,8 @@ int main(int argc, char* argv[])
     // Warning about current working folder
     chdir(WORKING_FOLDER);
     printf("[WARNING] Working folder: %s\n", WORKING_FOLDER);
+    printf("[INFO] Change working folder at const.h.\n");
+    printf("[INFO] Last build: 00:05am 22.04.2017.\n");
 
     signal(SIGINT, intHandler);
 
