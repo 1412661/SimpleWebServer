@@ -15,31 +15,6 @@
 #include "function.h"
 
 /**
- * Alert and halt program for critical errors
- * @param format of output strings
- * @param list of variable for output
- */
-void error(const char *format, ...)
-{
-    /**
-    * Example use:
-    * error("Could not open file", "test.txt", " for writing");
-    * Output:
-    * Critical error: Could not open file test.txt for writing
-    */
-
-    va_list arg;
-
-    va_start(arg, format);
-    fprintf(stderr, "Critical error: ");
-    vfprintf(stderr, format, arg);
-    fprintf(stderr, "\n");
-    va_end(arg);
-
-    exit(1);
-}
-
-/**
  * Clone a memory space
  * @param Pointer point to the memory space that need clone
  * @param Size of memory space that need clone
@@ -57,106 +32,6 @@ char* clone(char* buffer, unsigned int size, unsigned int padding)
     */
     return memcpy((char*)malloc(sizeof(char)*(size+padding)), buffer, size);
 }
-
-/**
- * Convert hex to dec by using strtol() without modified memory
- * @param Hex string
- * @param Pointer to the last character of the hex string
- * @return Dec value
- */
-unsigned int hex(char* str, char* end)
-{
-    // Because strtol() will modify memory,
-    // we have to use temporary memory space for input
-    char* tmp = clone(str, end-str+1, 0);
-    tmp[end-str] = '\0';
-
-    unsigned int result = strtol(tmp, NULL, 16);
-
-    free(tmp);
-
-    return result;
-}
-
-/**
- * Check if string satisfy regular expression (POSIX extended standard)
- * @param Input string
- * @param Regular expression
- * @return 0 if matched, 1 if not
- */
-int regexCheck(char* data, char* regexString)
-{
-    // Max matching group (only need two, one for full group, one for child group)
-    int tmp = 2;
-
-    struct List* list = parseByRegex(regexString, data, &tmp);
-    if (list == NULL)
-        return 0;
-
-    freeList(&list);
-
-    return 1;
-}
-
-/**
- * Parse string into several parts by regular expression (POSIX extended standard)
- * @param Regular expressing string
- * @param String need to be parsed
- * @param Maximum capture group. If null, REGEX_MAX_MATCH is used.
- *        Return actual capture groups when finish.
- * @return Linked list that store both full capture group and child capture group.
- */
-struct List* parseByRegex(char* regexString, char* string, unsigned int* nCaptureGroup)
-{
-    // If nCaptureGroup != 0, max capture group (regexMaxMatch) is nCaptureGroup
-    // otherwise use REGEX_MAX_MATCH
-    unsigned int regexMaxMatch = REGEX_MAX_MATCH;
-    if (nCaptureGroup != NULL)
-        if (*nCaptureGroup != 0)
-        {
-            regexMaxMatch = *nCaptureGroup;
-            *nCaptureGroup = 0;
-        }
-
-    regex_t regex;
-    regmatch_t *pmatch = (regmatch_t*)malloc(sizeof(regmatch_t)*regexMaxMatch);
-
-    //REG_EXTENDED: Use POSIX Extended Regular Expression
-    if (regcomp(&regex, regexString, REG_EXTENDED))
-        printf("parseByRegex(): Could not compile regex: %s\n", regexString);
-
-    if (regexec(&regex, string, regexMaxMatch, pmatch, 0))
-    {
-        regfree(&regex);
-        free(pmatch);
-        return NULL;
-    }
-
-    regfree(&regex);
-
-    struct List* r = NULL;
-    int i = 0;
-    for (i = 0; i < regexMaxMatch; i++)
-    {
-        if (pmatch[i].rm_so < 0)
-            break;
-
-        int len = pmatch[i].rm_eo - pmatch[i].rm_so;			// Get length of matching group
-        char* str = clone(string + pmatch[i].rm_so, len, 1);	// Clone matching group into new address space
-        str[len] = '\0';
-
-        struct List* tmp = newList(str);						// Insert matching group to linked list
-        insertList(&r, tmp);
-
-        if (nCaptureGroup != NULL)								// nCaptureGroup is used to count captured matching groups
-            (*nCaptureGroup)++;
-    }
-
-    free(pmatch);
-
-    return r;
-}
-
 
 /**
  * Get request file in HTTP request
@@ -211,10 +86,10 @@ int countChildProcess(int parentPid)
  */
 char* getRequestCountry(char* msg)
 {
-    if (strstr(msg, "GET /result.html") == NULL)
+    if (!strstr(msg, "GET /result.html"))
         return NULL;
 
-    char* country = strstr(msg, "country=") + 8;
+    char* country = strstr(msg, "country=") + strlen("country=");
 
     int size = 0;	// size of country string
     while (country[size] != ' ' && country[size] != '&')
@@ -223,7 +98,12 @@ char* getRequestCountry(char* msg)
     country = clone(country, size, 1);
     country[size] = '\0';
 
-    return country;
+
+    char* decodedCountry = clone(country, strlen(country), 1);
+    decode(country, decodedCountry);
+    free(country);
+
+    return decodedCountry;
 }
 
 char* searchCap(char* country)
@@ -232,27 +112,32 @@ char* searchCap(char* country)
     if (f == NULL)
 		return NULL;
 
-    char* capital = NULL;		// return data
-	char* comma;				// pointer that point to the comma in each row in database
-	char* countryDatabase;		// country in database
-	char* capitalDatabase;		// capital in database
+    char* capital = NULL;
+    char* buff = (char*)malloc(BUFFSIZE_VAR);
 
-    char buff[BUFFSIZE_VAR];
-
-    while (fgets(buff, BUFFSIZE_DATA, f) > 0)
+    while (fgets(buff, BUFFSIZE_VAR, f) > 0)
 	{
-        comma = strstr(buff, ",");
-        if (comma == NULL)			// Problem in the database itself: a row in database doesn't contain comma
-		{
-			printf("Database is corrupted\n");
-			break;
-		}
-        countryDatabase = buff;
-        capitalDatabase = comma+1;
-        *comma = '\0';
-        *(strstr(capitalDatabase, "\r")) = '\0';
+		// [Vietnam,Hanoi]
+		char* bracketOpen = strstr(buff, "[");
+		char* bracketClose = strstr(buff, "]");
+        char* comma = strstr(buff, ",");
 
-        //printf("Comparing %s vs %s (%s) in DB\n", country, countryDatabase, capitalDatabase);
+        if ((int)bracketClose * (int)bracketOpen * (int)comma == 0)
+		{
+			#ifdef DEBUG_MODE
+			printf("Database is corrupted\n");
+			#endif // DEBUG_MODE
+			continue;
+		}
+
+        char* countryDatabase = bracketOpen+1;
+        char* capitalDatabase = comma+1;
+        *bracketClose = '\0';
+        *comma = '\0';
+
+        #ifdef DEBUG_MODE
+        printf("Comparing %s vs %s (%s)\n", country, countryDatabase, capitalDatabase);
+        #endif // DEBUG_MODE
         if (strcmp(countryDatabase, country) == 0)
 		{
             capital = (char*)malloc(BUFFSIZE_VAR);
@@ -261,7 +146,137 @@ char* searchCap(char* country)
 		}
 	}
 
+	free(buff);
     fclose(f);
 
     return capital;
+}
+
+char* readFile(char* file)
+{
+    FILE* f = fopen(file, "rb");
+    if (f == NULL)
+		return NULL;
+
+	fseek(f, 0, SEEK_END);
+	int size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	char* buff = (char*)malloc(size+1);
+
+    fread(buff, size, 1, f);
+    buff[size] = '\0';
+
+    fclose(f);
+
+    return buff;
+}
+
+char* extractRequest(char* mesg)
+{
+    char* lineBreak = strstr(mesg, "\r");
+    char* request = clone(mesg, lineBreak-mesg+1, 1);
+    request[lineBreak-mesg+1] = '\0';
+
+    return request;
+}
+
+
+
+/*char* char_replace(char search, char replace, char* subject)
+{
+    for (int i = 0; i < strlen(subject); i++)
+        if (subject[i] == search)
+			subject[i] = replace;
+
+	return subject;
+}*/
+
+/*
+ * Search and replace a string with another string , in a string
+ * Ref: http://www.binarytides.com/str_replace-for-c/
+ */
+/*char *str_replace(char *search , char *replace , char *subject)
+{
+    char  *p = NULL , *old = NULL , *new_subject = NULL ;
+    int c = 0 , search_size;
+
+    search_size = strlen(search);
+
+    //Count how many occurences
+    for(p = strstr(subject , search) ; p != NULL ; p = strstr(p + search_size , search))
+    {
+        c++;
+    }
+
+    //Final size
+    c = ( strlen(replace) - search_size )*c + strlen(subject);
+
+    //New subject with new size
+    new_subject = malloc( c );
+
+    //Set it to blank
+    strcpy(new_subject , "");
+
+    //The start position
+    old = subject;
+
+    for(p = strstr(subject , search) ; p != NULL ; p = strstr(p + search_size , search))
+    {
+        //move ahead and copy some text from original subject , from a certain position
+        strncpy(new_subject + strlen(new_subject) , old , p - old);
+
+        //move ahead and copy the replacement text
+        strcpy(new_subject + strlen(new_subject) , replace);
+
+        //The new start position after this search match
+        old = p + search_size;
+    }
+
+    //Copy the part after the last search match
+    strcpy(new_subject + strlen(new_subject) , old);
+
+    return new_subject;
+}*/
+
+/*
+int main()
+{
+	const char *url = "http%3A%2F%2ffoo+bar%2fabcd";
+	char out[strlen(url) + 1];
+
+	printf("length: %d\n", decode(url, 0));
+	puts(decode(url, out) < 0 ? "bad string" : out);
+
+	return 0;
+}
+*/
+
+// https://www.rosettacode.org/wiki/URL_decoding#C
+inline int ishex(int x)
+{
+	return	(x >= '0' && x <= '9')	||
+		(x >= 'a' && x <= 'f')	||
+		(x >= 'A' && x <= 'F');
+}
+
+// https://www.rosettacode.org/wiki/URL_decoding#C
+int decode(char *s, char *dec)
+{
+	char *o;
+	char *end = s + strlen(s);
+	int c;
+
+	for (o = dec; s <= end; o++) {
+		c = *s++;
+		if (c == '+') c = ' ';
+		else if (c == '%' && (	!ishex(*s++)	||
+					!ishex(*s++)	||
+					!sscanf(s - 2, "%2x", &c)))
+			return -1;
+
+		if (dec) *o = c;
+	}
+
+	return o - dec;
 }

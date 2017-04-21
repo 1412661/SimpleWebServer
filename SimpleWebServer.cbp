@@ -32,13 +32,16 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="Makefile" />
 		<Unit filename="README.md" />
 		<Unit filename="const.h" />
-		<Unit filename="country.html" />
 		<Unit filename="function.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="function.h" />
+		<Unit filename="html/country.html" />
+		<Unit filename="html/list.txt" />
+		<Unit filename="html/result.html" />
 		<Unit filename="http.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -47,7 +50,8 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="linklist.h" />
-		<Unit filename="result.html" />
+		<Unit filename="sh/clean.sh" />
+		<Unit filename="sh/syncFork.sh" />
 		<Unit filename="webserver.c">
 			<Option compilerVar="CC" />
 		</Unit>
