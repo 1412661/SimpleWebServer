@@ -72,7 +72,8 @@ int main(int argc, char* argv[])
     chdir(WORKING_FOLDER);
     printf("[WARNING] Working folder: %s\n", WORKING_FOLDER);
     printf("[INFO] Change working folder at const.h.\n");
-    printf("[INFO] Last build: 11:34pm 22.04.2017.\n");
+    printf("[INFO] Max connection: %d\n", CONNMAX);
+    printf("[INFO] Last build: 11:54pm 22.04.2017.\n");
 
     // Put a trap for SIGINT (Ctrl+C)
     signal(SIGINT, intHandler);
