@@ -1,9 +1,7 @@
 /*
 
 This is a very simple HTTP server. Default port is 9999
-You can provide command line arguments like:- $./a.aout -p [port]
-
-to start a server at port 50000:
+To start a server at port 50000:
 $ ./webserver -p 50000
 
 http://stackoverflow.com/questions/9681531/graceful-shutdown-server-socket-in-linux
@@ -74,7 +72,8 @@ int main(int argc, char* argv[])
     chdir(WORKING_FOLDER);
     printf("[WARNING] Working folder: %s\n", WORKING_FOLDER);
     printf("[INFO] Change working folder at const.h.\n");
-    printf("[INFO] Last build: 19:15am 22.04.2017.\n");
+    printf("[INFO] Max connection: %d\n", CONNMAX);
+    printf("[INFO] Last build: 11:39pm 22.04.2017.\n");
 
     // Put a trap for SIGINT (Ctrl+C)
     signal(SIGINT, intHandler);
