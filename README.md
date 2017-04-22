@@ -6,11 +6,6 @@ Reference:
 - [Simple web server](http://blog.abhijeetr.com/2010/04/very-simple-http-server-writen-in-c.html)
 - Socket server [server.c](http://www.linuxhowtos.org/data/6/server.c)
 
-Task:
-* Fix bugs (Bao)
-* Add database and search functions (Akasaka).
-* Show capital request on console. Return HTTP/400 when capital request not found in HTTP request. (Danh)
-
 Tutorial:
 - [Merge branch into another branch](http://stackoverflow.com/questions/5601931/best-and-safest-way-to-merge-a-git-branch-into-master)
 - [Syncing a fork](https://help.github.com/articles/syncing-a-fork/)
