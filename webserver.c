@@ -32,31 +32,18 @@ http://stackoverflow.com/questions/9681531/graceful-shutdown-server-socket-in-li
 #include <semaphore.h>
 
 #include "const.h"
+#include "type.h"
 #include "function.h"
 
-// Send 10 request/s to the server
-// watch -n 0.1 wget --delete-after http://localhost:9999
-
-int parentPID;		// PID of this process
-int socketfd;		// Socket File Descript that define a socket
-
+// Start socket server
 void startServer(int port);
+
+// Child thread that will reponse HTTP request
 void respond(void*);
 
-struct DataToPassToThread
-{
-    int socketfd;
-    int thread_id;
-};
-
-struct TheadList
-{
-    int count;
-    int status[CONNMAX];				// thread[i] is running if thread[i] == 1
-    pthread_t handler[CONNMAX];			// Thread identifier
-} thread;
-
-pthread_mutex_t mutex;
+int socketfd;				// Socket File Descript that define a socket
+struct ThreadList thread;			// Threads manager
+pthread_mutex_t mutex;		// Mutex to lock thread manager
 
 int keepRunning = 1;
 //static volatile int keepRunning = 1;
@@ -66,7 +53,11 @@ void intHandler()
     printf("\nCtrl + C catched !\n");
     printf("[INFO] Waiting for all sockets to be closed...\n");
     printf("[INFO] Thread left: %d\n", thread.count);
+
+    // Stop accept more connection
     keepRunning = 0;
+
+    // Wait for all thread exit	// will very soon
     while (thread.count != 0)
     {
     }
@@ -88,15 +79,17 @@ int main(int argc, char* argv[])
     // Put a trap for SIGINT (Ctrl+C)
     signal(SIGINT, intHandler);
 
+    // Thread management task
     thread.count = 0;
-    memset(thread.status, 0, sizeof(thread.status));
-
+    memset(thread.status, 0, CONNMAX*sizeof(thread.status[0]));
     pthread_mutex_init(&mutex, NULL);
 
+    // Set default port or user-defined port
     int port = DEFAULT_PORT;
     if (argc == 2)
         port = atoi(argv[1]);
 
+	// Start socket server
     startServer(port);
 
     while (keepRunning)
@@ -150,11 +143,16 @@ int main(int argc, char* argv[])
                 data.socketfd = clientfd;
                 data.thread_id = freeThreadID;
                 pthread_create(&(thread.handler[freeThreadID]), NULL, respond, &data);
+                //pthread_create(&(thread.handler[freeThreadID]), &(thread.attr[freeThreadID]), respond, &data);
+                pthread_detach(thread.handler[freeThreadID]);
             }
         }
     }
 
-    return 0;
+    //for (int i = 0; i < CONNMAX; i++)
+	//	pthread_attr_destroy(&(thread.attr[i]));
+
+    pthread_exit(NULL);
 }
 
 void startServer(int port)
@@ -165,7 +163,6 @@ void startServer(int port)
         printf("[ERROR] socket(): could not initialize socket");
 
     struct sockaddr_in serv_addr;
-    //bzero((char*)&serv_addr, sizeof(serv_addr));	// Set all byte to 0
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
 
@@ -211,6 +208,7 @@ void respond(void* arg)
 
         char* request = extractRequest(mesg);
         printf("[INFO] Client --> \033[92mServer\033[0m: %s\n", request);
+        free(request);
 
         char* file = getRequestFile(mesg);
         char *htmlFile = readFile(file);
@@ -244,6 +242,7 @@ void respond(void* arg)
                 // Return data to client
                 write(data->socketfd, returnData, strlen(returnData));
 
+                free(capital);
                 free(country);
                 free(returnData);
             }
@@ -251,6 +250,7 @@ void respond(void* arg)
                 // Process anther request like favicon.ico, bootstrap.min.css,...
                 write(data->socketfd, htmlFile, strlen(htmlFile));
         }
+        free(htmlFile);
         free(file);
         printf("-----------------------------------\n");
     }
@@ -265,6 +265,7 @@ void respond(void* arg)
     printf("[INFO] Connection at pid %d is closed\n", getpid());
 #endif // DEBUG_MODE
 
+	// Update that a thread is exited
 	pthread_mutex_lock(&mutex);
 	thread.count--;
 	thread.status[data->thread_id] = 0;

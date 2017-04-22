@@ -7,7 +7,7 @@ LIBS = -lpthread
 # #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
 
 IGNORE = -Wno-incompatible-pointer-types -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
-ARGS =
+ARGS = -std=c99
 
 all:
 	$(CC) $(IGNORE) $(ARGS) -c webserver.c $(LIBS)
