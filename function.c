@@ -1,10 +1,10 @@
-#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 #include <stdlib.h>
+
 #include "const.h"
+#include "type.h"
 #include "function.h"
 
 /**
@@ -54,29 +54,6 @@ char* getRequestFile(char* msg)
 }
 
 /**
- * Count child processes of a parent process
- * @param Parent process ID
- * @return Number of child process (exclude sh)
- */
-int countChildProcess(int parentPid)
-{
-    char command[BUFFSIZE_VAR] = "";
-    char countc[BUFFSIZE_VAR];
-
-
-    sprintf(command, "ps --ppid %d --no-headers | grep -v defunct | wc -l", parentPid);
-
-    FILE* f = popen(command, "r");
-    fgets(countc, sizeof(countc), f);
-    fclose(f);
-
-	sprintf(command, "ps --ppid %d --no-headers | grep -v defunct", parentPid);
-	system(command);
-
-    // Don't yourself when executing a bash script
-    return strtol(countc, NULL, 10) - 1;
-}
-/**
  * Get country name in HTTP request
  * @param HTTP request message
  * @return Request country
@@ -84,6 +61,9 @@ int countChildProcess(int parentPid)
 char* getRequestCountry(char* msg)
 {
     if (!strstr(msg, "GET /result.html"))
+        return NULL;
+
+	if (strstr(msg, "country=") == NULL)
         return NULL;
 
     char* country = strstr(msg, "country=") + strlen("country=");
@@ -103,6 +83,12 @@ char* getRequestCountry(char* msg)
     return decodedCountry;
 }
 
+
+/**
+ * Search captital by country
+ * @param country
+ * @return capital of the country, NULL if couldn't find
+ */
 char* searchCap(char* country)
 {
     FILE* f = fopen(DATABASE, "r");
@@ -149,6 +135,12 @@ char* searchCap(char* country)
     return capital;
 }
 
+
+ /**
+ * Read file into memory
+ * @param Path to file
+ * @return File content (terminated by NULL), NULL if file is not exist
+ */
 char* readFile(char* file)
 {
     FILE* f = fopen(file, "rb");
@@ -159,6 +151,7 @@ char* readFile(char* file)
 	int size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
+	// +1 because buff is a NULL terminated string
 	char* buff = (char*)malloc(size+1);
 
     fread(buff, size, 1, f);
@@ -169,6 +162,12 @@ char* readFile(char* file)
     return buff;
 }
 
+
+/**
+ * Get the first line of a HTTP request
+ * @param HTTP request
+ * @return First line of the HTTP request
+ */
 char* extractRequest(char* mesg)
 {
     char* lineBreak = strstr(mesg, "\r");
@@ -249,6 +248,11 @@ int main()
 }
 */
 
+/**
+ * Test if a chracter is in hex format: 0123456789ABCDEF
+ * @param A character that need to be test
+ * @return 1 for true, 0 for false
+ */
 // https://www.rosettacode.org/wiki/URL_decoding#C
 inline int ishex(int x)
 {
@@ -257,6 +261,14 @@ inline int ishex(int x)
 		(x >= 'A' && x <= 'F');
 }
 
+/**
+ * Decode a query string in HTTP/GET request
+ * Example: Vi%26%237879%3Bt+Nam will become Việt Nam
+ * @param Input query string
+ * @param Output query string (need to be allocated first) or NULL
+ * @return A decoded query string. If the second param is NULL,
+ *		   length of the decoded query string will be returned
+ */
 // https://www.rosettacode.org/wiki/URL_decoding#C
 int decode(char *s, char *dec)
 {
@@ -276,4 +288,18 @@ int decode(char *s, char *dec)
 	}
 
 	return o - dec;
+}
+
+
+/**
+ * Find a free thread handler in marking array
+ * @param Marking array
+ * @return index of the free thread, -1 if all handler is busy.
+ */int findEmptyThread(int *thread)
+{
+    for (int i = 0; i < CONNMAX; i++)
+        if (thread[i] == 0)
+			return i;
+
+	return -1;
 }

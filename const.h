@@ -7,7 +7,8 @@
  */
 
 
- #define DEBUG_MODE
+#define DEBUG_MODE
+//#undef DEBUG_MODE
 
 #define INDEX_FILE		"country.html"	// Index file of web server
 #define BUFFSIZE_DATA 	1024			// Max buffer size for data
