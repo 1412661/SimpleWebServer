@@ -23,13 +23,6 @@ char* clone(char* buffer, unsigned int size, unsigned int padding);
 char* getRequestFile(char* msg);
 
 /**
- * Count child processes of a parent process
- * @param Parent process ID
- * @return Number of child process (exclude sh)
- */
-int countChildProcess(int parentPid);
-
-/**
  * Search captital by country
  * @param country
  * @return capital of the country, NULL if couldn't find
@@ -44,11 +37,47 @@ char* searchCap(char* country);
  */
  char* getRequestCountry(char* msg);
 
+ /**
+ * Read file into memory
+ * @param Path to file
+ * @return File content (terminated by NULL), NULL if file is not exist
+ */
 char* readFile(char* file);
+
+
+/**
+ * Get the first line of a HTTP request
+ * @param HTTP request
+ * @return First line of the HTTP request
+ */
 char* extractRequest(char* mesg);
 
+
+// URL decoder
+/**
+ * Test if a chracter is in hex format: 0123456789ABCDEF
+ * @param A character that need to be test
+ * @return 1 for true, 0 for false
+ */
 int ishex(int x);
+
+/**
+ * Decode a query string in HTTP/GET request
+ * Example: Vi%26%237879%3Bt+Nam will become Việt Nam
+ * @param Input query string
+ * @param Output query string (need to be allocated first) or NULL
+ * @return A decoded query string. If the second param is NULL,
+ *		   length of the decoded query string will be returned
+ */
 int decode(char *s, char *dec);
+
+/**
+ * Find a free thread handler in marking array
+ * @param Marking array
+ * @return index of the free thread, -1 if all handler is busy.
+ */
+int findEmptyThread(int *thread);
+
 
 //char* char_replace(char search, char replace, char* subject)
 //char *str_replace(char *search , char *replace , char *subject);
