@@ -26,9 +26,3 @@ To run the program at default port 9999
 To run the program at a specific port, use option -p
 
     ./webserver -p <port>
-    
-## Live demo
-
-Please take a look at [http://webserver.baonq.xyz](http://webserver.baonq.xyz)
-
-Live demo will be updated and recompiled hourly from source code from GitHub
