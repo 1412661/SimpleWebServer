@@ -1,6 +1,6 @@
 # SimpleWebServer
 
-[![Build Status](https://travis-ci.org/baonq-me/SimpleWebServer.svg?branch=master)](https://travis-ci.org/1412661/SimpleWebServer)
+[![Build Status](https://travis-ci.org/baonq-me/simple-web-server.svg?branch=master)](https://travis-ci.org/baonq-me/simple-web-server)
 
 Reference:
 - [Simple web server](http://blog.abhijeetr.com/2010/04/very-simple-http-server-writen-in-c.html)
