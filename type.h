@@ -4,6 +4,7 @@
 #include "const.h"
 
 //ABC
+//DEF
 
 struct ThreadList
 {
